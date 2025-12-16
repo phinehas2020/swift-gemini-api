@@ -152,7 +152,7 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
         didOpenWithProtocol protocol: String?
     ) {
         print("✅ WebSocket opened! Protocol: \(`protocol` ?? "none")")
-        print("📤 Sending setup message...")
+        print("📤 Sending setup message for model: \(model)...")
         
         // Start listening for messages now that connection is open
         listen()
@@ -443,9 +443,9 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
 				"automaticActivityDetection": [
 					"disabled": automaticActivityDetection,
 					"start_of_speech_sensitivity": "START_SENSITIVITY_HIGH",
-					"end_of_speech_sensitivity": "END_SENSITIVITY_HIGH",
-					"prefix_padding_ms": 20,
-					"silence_duration_ms": 100,
+					"end_of_speech_sensitivity": "END_SENSITIVITY_LOW",
+					"prefix_padding_ms": 100,
+					"silence_duration_ms": 500,
 				]
 			],
 
