@@ -147,6 +147,7 @@ public final class AudioRecorder: ObservableObject, AudioRecorderProtocol {
         }
     }
     
+    #if os(macOS)
     func getDeviceSampleRate(deviceID: AudioDeviceID) -> Double? {
         var address = AudioObjectPropertyAddress(
             mSelector: kAudioDevicePropertyNominalSampleRate,
@@ -160,6 +161,7 @@ public final class AudioRecorder: ObservableObject, AudioRecorderProtocol {
         let status = AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &rate)
         return status == noErr ? rate : nil
     }
+    #endif
 
     private func createInputAudioUnit() -> OSStatus {
         var status: OSStatus = noErr
@@ -215,7 +217,8 @@ public final class AudioRecorder: ObservableObject, AudioRecorderProtocol {
         )
         guard status == noErr else { return status }
 
-        // Choose input device (default input)
+        #if os(macOS)
+        // Choose input device (default input) - macOS only
         var deviceID = AudioDeviceID(0)
         var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
         var address = AudioObjectPropertyAddress(
@@ -250,8 +253,11 @@ public final class AudioRecorder: ObservableObject, AudioRecorderProtocol {
             return status
         }
         
-        // 48000
         let sampleRate = getDeviceSampleRate(deviceID: deviceID) ?? 44100
+        #else
+        // iOS uses the system default audio input automatically
+        let sampleRate: Double = 44100
+        #endif
 
         streamFormat = AudioStreamBasicDescription(
             mSampleRate: sampleRate,
