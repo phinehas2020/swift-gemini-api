@@ -16,6 +16,8 @@ import Foundation
 import AudioToolbox
 #if os(macOS)
 import CoreAudio
+#else
+import AVFAudio
 #endif
 
 public final class AudioRecorder: ObservableObject, AudioRecorderProtocol {
@@ -255,8 +257,17 @@ public final class AudioRecorder: ObservableObject, AudioRecorderProtocol {
         
         let sampleRate = getDeviceSampleRate(deviceID: deviceID) ?? 44100
         #else
-        // iOS uses the system default audio input automatically
-        let sampleRate: Double = 44100
+        // iOS: Configure AVAudioSession and get actual hardware sample rate
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setActive(true)
+            let sampleRate = audioSession.sampleRate
+            print("📱 iOS Audio: Using hardware sample rate: \(sampleRate) Hz")
+        } catch {
+            print("❌ Failed to configure AVAudioSession: \(error)")
+        }
+        let sampleRate = AVAudioSession.sharedInstance().sampleRate
         #endif
 
         streamFormat = AudioStreamBasicDescription(
