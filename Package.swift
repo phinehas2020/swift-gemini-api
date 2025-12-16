@@ -6,8 +6,8 @@ import PackageDescription
 let package = Package(
     name: "swift-gemini-api",
 	platforms: [
-		.iOS(.v14),
-		.macOS(.v12)
+		.iOS(.v17),
+		.macOS(.v14)
 	],
     products: [
         .library(
@@ -22,6 +22,7 @@ let package = Package(
 				.linkedFramework("AudioToolbox"),
 				.linkedFramework("AVFoundation"),
 				.linkedFramework("AVFAudio"),
+				.linkedFramework("CoreAudio", .when(platforms: [.macOS])),
 			]
         ),
 
