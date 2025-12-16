@@ -417,8 +417,11 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
     }
 
 	private func sendSetup() {
+		// Handle model name - add models/ prefix only if not already present
+		let modelName = model.hasPrefix("models/") ? model : "models/\(model)"
+		
 		let setup: [String: Any] = [
-			"model": "models/\(model)",
+			"model": modelName,
 			"generationConfig": [
 				"candidateCount": candidateCount,
 				"maxOutputTokens": maxOutputTokens,
