@@ -14,6 +14,9 @@
 
 import Foundation
 import AudioToolbox
+#if os(macOS)
+import CoreAudio
+#endif
 
 public final class AudioRecorder: ObservableObject, AudioRecorderProtocol {
     @Published private(set) public var isRecording: Bool = false
