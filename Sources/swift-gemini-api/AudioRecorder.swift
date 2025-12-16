@@ -27,7 +27,7 @@ public final class AudioRecorder: ObservableObject, AudioRecorderProtocol {
     
     public var inputUnit: AudioUnit?
     public var streamFormat = AudioStreamBasicDescription()
-    private var bufferSizeFrames: UInt32 = 512
+    private var bufferSizeFrames: UInt32 = 4096  // Large enough for 48kHz callbacks
     public var inputBufferList: UnsafeMutablePointer<AudioBufferList>?
     
     public var audioFile: ExtAudioFileRef?
@@ -394,9 +394,21 @@ private func inputCallback(
 ) -> OSStatus {
     let recorder = Unmanaged<AudioRecorder>.fromOpaque(inRefCon).takeUnretainedValue()
 
-    guard let inputUnit = recorder.inputUnit,
-          let bufferList = recorder.inputBufferList else {
+    guard let inputUnit = recorder.inputUnit else {
         return -1
+    }
+    
+    // Dynamically allocate buffer for the actual frame count
+    let bytesNeeded = inNumberFrames * recorder.streamFormat.mBytesPerFrame
+    let bufferList = UnsafeMutablePointer<AudioBufferList>.allocate(capacity: 1)
+    bufferList.pointee.mNumberBuffers = 1
+    bufferList.pointee.mBuffers.mNumberChannels = 1
+    bufferList.pointee.mBuffers.mDataByteSize = bytesNeeded
+    bufferList.pointee.mBuffers.mData = malloc(Int(bytesNeeded))
+    
+    defer {
+        free(bufferList.pointee.mBuffers.mData)
+        bufferList.deallocate()
     }
 
     let status = AudioUnitRender(
