@@ -120,7 +120,10 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
             return
         }
         
-        guard let url = URL(string: "wss://\(self.host)/ws/google.ai.generativelanguage.\(self.version).GenerativeService.BidiGenerateContent?key=\(self.apiKey)") else {
+        let urlString = "wss://\(self.host)/ws/google.ai.generativelanguage.\(self.version).GenerativeService.BidiGenerateContent?key=\(self.apiKey)"
+        print("🔗 Connecting to: \(urlString.prefix(80))...")
+        
+        guard let url = URL(string: urlString) else {
             print("Invalid WebSocket URL")
             return
         }
@@ -129,7 +132,7 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
         self.socket = socket
         socket.resume()
         
-		listen()
+        // Note: listen() will be called from didOpenWithProtocol after connection is confirmed
     }
 
     public func disconnect() {
@@ -148,9 +151,13 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
         webSocketTask: URLSessionWebSocketTask,
         didOpenWithProtocol protocol: String?
     ) {
-        print("web socket opened!")
+        print("✅ WebSocket opened! Protocol: \(`protocol` ?? "none")")
+        print("📤 Sending setup message...")
         
-        // Send setup immediately - no delay to avoid race conditions
+        // Start listening for messages now that connection is open
+        listen()
+        
+        // Send setup immediately
         self.sendSetup()
     }
     
@@ -355,19 +362,23 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
     }
 
     private func send(json: [String: Any]) {
+        guard socket?.state == .running else {
+            print("❌ Cannot send - socket not running (state: \(socket?.state.rawValue ?? -1))")
+            return
+        }
+        
         guard let data = try? JSONSerialization.data(withJSONObject: json) else {
             print("Failed to encode JSON")
             return
         }
         
         if let jsonString = String(data: data, encoding: .utf8) {
+            print("📤 Sending \(jsonString.prefix(200))...")
             socket?.send(.string(jsonString)) { error in
                 if let error = error {
                     print("❌ Error sending message: \(error)")
                 } else {
-                    if self.verbose {
-                        print("✅ Sent: \(jsonString)")
-                    }
+                    print("✅ Message sent successfully")
                 }
             }
         }
