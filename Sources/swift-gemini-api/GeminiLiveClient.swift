@@ -493,6 +493,28 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
         send(json: ["toolResponse":toolResponse])
     }
     
+    /// Send activity start signal (call before sending audio)
+    public func sendActivityStart() {
+        let message: [String: Any] = [
+            "realtimeInput": [
+                "audioStreamStart": true
+            ]
+        ]
+        print("🎙️ Sending activity start signal")
+        send(json: message)
+    }
+    
+    /// Send activity end signal (call after user finishes speaking)
+    public func sendActivityEnd() {
+        let message: [String: Any] = [
+            "realtimeInput": [
+                "audioStreamEnd": true
+            ]
+        ]
+        print("🎙️ Sending activity end signal")
+        send(json: message)
+    }
+    
 	public func sendAudio(base64:String) {
         if mute { return }
         
