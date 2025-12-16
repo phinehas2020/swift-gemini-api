@@ -150,9 +150,8 @@ public final class GeminiLiveClient: NSObject, URLSessionWebSocketDelegate {
     ) {
         print("web socket opened!")
         
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-            self.sendSetup()
-        }
+        // Send setup immediately - no delay to avoid race conditions
+        self.sendSetup()
     }
     
 	public func urlSession(
